@@ -1,0 +1,43 @@
+{
+  "env": {
+    "CLAUDE_CODE_DISABLE_NONESSENTIAL_TRAFFIC": "1",
+    "DISABLE_COST_WARNINGS": "1"
+  },
+  "includeCoAuthoredBy": false,
+  "hooks": {},
+  "permissions": {
+    "allow": [
+      "mcp__gosu",
+      "mcp__sequential-thinking",
+      "mcp__context7",
+      "mcp__ide__getDiagnostics",
+      "Bash(yarn list:*)",
+      "Bash(mkdir:*)",
+      "Bash(find:*)",
+      "Bash(ls:*)",
+      "Bash(tree:*)",
+      "Bash(echo:*)",
+      "Bash(touch:*)",
+      "Bash(pushd:*)",
+      "Bash(sed:*)",
+      "Bash(cp:*)",
+      "Bash(tmux:*)",
+      "Bash(git add:*)",
+      "Bash(git commit:*)",
+      "Bash(git worktree:*)",
+      "Bash(git remote get-url:*)",
+      "Bash(code:*)",
+      "Bash(inotifywait:*)",
+      "Bash(true)",
+      "Bash(done)",
+      "WebFetch",
+      "WebSearch"
+    ],
+    "additionalDirectories": [
+      "/tmp/", 
+      "/workspaces/",
+      "~/.claude/"
+    ],
+    "defaultMode": "acceptEdits"
+  }
+}
