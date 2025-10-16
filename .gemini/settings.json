@@ -1,13 +1,12 @@
 {
-  "usageStatisticsEnabled": false,
   "mcpServers": {
     "sequential-thinking": {
-			"command": "npx",
-			"args": [
-				"-y",
-				"@modelcontextprotocol/server-sequential-thinking"
-			]
-		},
+      "command": "npx",
+      "args": [
+        "-y",
+        "@modelcontextprotocol/server-sequential-thinking"
+      ]
+    },
     "context7": {
       "command": "npx",
       "args": [
@@ -15,5 +14,8 @@
         "@upstash/context7-mcp"
       ]
     }
+  },
+  "privacy": {
+    "usageStatisticsEnabled": false
   }
 }
