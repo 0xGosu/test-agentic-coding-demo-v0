@@ -1,5 +1,3 @@
-## Page 1
-
 # Stryv Academics - Phase 1 MVP Spec
 
 Phase 1 MVP | Target Launch: January 2026
@@ -39,9 +37,6 @@ Stryv Academics is Hong Kong's largest peer-to-peer tutoring platform (400+ tuto
 *   Applies to all roles (admin sidebar + non-admin top tabs)
 
 ---
-
-
-## Page 2
 
 * Touch-optimized tap targets (48x48px minimum)
 * Panel closes on navigation or backdrop tap
@@ -91,9 +86,6 @@ Stryv Academics is Hong Kong's largest peer-to-peer tutoring platform (400+ tuto
 
 ---
 
-
-## Page 3
-
 # Leads
 
 *   List view: All leads from Webflow, filterable
@@ -138,9 +130,6 @@ No "Request Tutor" button (tutors don't need this)
 ## Parent Navigation (Top Tabs)
 
 ---
-
-
-## Page 4
 
 ## Onboarding Flow:
 
@@ -188,9 +177,6 @@ No "Request Tutor" button (tutors don't need this)
 
 ---
 
-
-## Page 5
-
 # User Status System
 
 ## Status Definitions
@@ -222,9 +208,6 @@ WHERE USER_STATUS enum = ('pending', 'onboarding', 'active', 'inactive')
 *   When set: Hidden from UI, access blocked, scheduled for hard-delete (30-90 days)
 
 ---
-
-
-## Page 6
 
 # Database Architecture
 
@@ -263,9 +246,6 @@ lesson_status -- Add 'late_cancelled' to existing enum
 ---
 
 
-## Page 7
-
-SQL
 ```sql
 -- Update enum to include:
 relationship_status -- Add 'trial' to existing enum
@@ -279,7 +259,6 @@ relationship_status -- Add 'trial' to existing enum
 
 3. **Users Table - Add Credit Balance**
 
-SQL
 ```sql
 credit_balance NUMERIC DEFAULT 0 CHECK (credit_balance >= 0)
 ```
@@ -288,7 +267,6 @@ credit_balance NUMERIC DEFAULT 0 CHECK (credit_balance >= 0)
 
 4. **Tutors Table - Add Deduction Balance**
 
-SQL
 ```sql
 deduction_balance NUMERIC DEFAULT 0 CHECK (deduction_balance >= 0)
 ```
@@ -301,7 +279,6 @@ deduction_balance NUMERIC DEFAULT 0 CHECK (deduction_balance >= 0)
 
 1. **Leads Table**
 
-SQL
 ```sql
 CREATE TABLE leads (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
@@ -309,54 +286,44 @@ CREATE TABLE leads (
     first_name TEXT NOT NULL,
     last_name TEXT NOT NULL,
     email TEXT NOT NULL,
+    phone TEXT,
+    school TEXT,
+    is_parent_inquiry BOOLEAN NOT NULL,
 
----
+    -- Subjects & preferences
+    subjects_requested TEXT[] NOT NULL,
+    learning_goals TEXT,
+    current_challenges TEXT,
+    preferred_schedule TEXT,
+    preferred_format TEXT CHECK (preferred_format IN ('online', 'in-person', 'hybrid')),
 
+    -- Progression
+    lead_status TEXT NOT NULL DEFAULT 'new' CHECK (lead_status IN (
+        'new', 'contacted', 'tutor_options_provided',
+        'tutor_selected',
+        'trial_scheduled', 'trial_completed', 'package_confirmed',
+        'lost'
+    )),
+    lost_reason TEXT,
 
-## Page 8
+    -- Relationships
+    preferred_tutor_id UUID REFERENCES users(id),
+    trial_lesson_id UUID REFERENCES lessons(id),
+    converted_user_ids UUID[],  -- [parent_id] and/or [student_id]
+    offered_tutor_ids UUID[],
 
-sql
-phone TEXT,
-school TEXT,
-is_parent_inquiry BOOLEAN NOT NULL,
+    -- Tracking
+    communication_notes TEXT,
+    stage_history JSONB,
 
--- Subjects & preferences
-subjects_requested TEXT[] NOT NULL,
-learning_goals TEXT,
-current_challenges TEXT,
-preferred_schedule TEXT,
-preferred_format TEXT CHECK (preferred_format IN ('online', 'in-person', 'hybrid')),
-
--- Progression
-lead_status TEXT NOT NULL DEFAULT 'new' CHECK (lead_status IN (
-    'new', 'contacted', 'tutor_options_provided',
-    'tutor_selected',
-    'trial_scheduled', 'trial_completed', 'package_confirmed',
-    'lost'
-)),
-lost_reason TEXT,
-
--- Relationships
-preferred_tutor_id UUID REFERENCES users(id),
-trial_lesson_id UUID REFERENCES lessons(id),
-converted_user_ids UUID[],  -- [parent_id] and/or [student_id]
-offered_tutor_ids UUID[],
-
--- Tracking
-communication_notes TEXT,
-stage_history JSONB,
-
-created_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT now(),
-updated_at TIMESTAMP WITH TIME ZONE DEFAULT now()
+    created_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT now(),
+    updated_at TIMESTAMP WITH TIME ZONE DEFAULT now()
 );
 ```
 
 No unique constraints - admin needs flexibility for multiple leads per student
 
 ---
-
-
-## Page 9
 
 ## 2. Payments Table
 
@@ -379,20 +346,10 @@ CREATE TABLE payments (
     refund_amount NUMERIC,
     refund_reason TEXT,
     refund_date TIMESTAMP WITH TIME ZONE,
-    ...
-);
-
----
-
-
-## Page 10
-
-sql
-credit_applied NUMERIC DEFAULT 0,
-
-paid_at TIMESTAMP WITH TIME ZONE,
-created_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT now(),
-updated_at TIMESTAMP WITH TIME ZONE DEFAULT now()
+    credit_applied NUMERIC DEFAULT 0,
+    paid_at TIMESTAMP WITH TIME ZONE,
+    created_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT now(),
+    updated_at TIMESTAMP WITH TIME ZONE DEFAULT now()
 );
 ```
 
@@ -423,10 +380,7 @@ CREATE TABLE lesson_resources (
     INDEX idx_lesson_resources_type (resource_type)
 );
 
----
-
-
-## Page 11
+```
 
 Storage: Supabase Storage /resources/{lesson_id}/{resource_type}/{filename}
 Limits: 10MB per file, supported types: PDF, TXT, JPEG, PNG, GIF
@@ -461,17 +415,10 @@ CREATE TABLE tutor_applications (
     evaluation_notes TEXT,
     rejection_reason TEXT,
     converted_tutor_id UUID REFERENCES users(id),
-
----
-
-
-## Page 12
-
-sql
-stage_transition_history JSONB,
-created_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT now(),
-updated_at TIMESTAMP WITH TIME ZONE DEFAULT now(),
-activated_at TIMESTAMP WITH TIME ZONE
+    stage_transition_history JSONB,
+    created_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT now(),
+    updated_at TIMESTAMP WITH TIME ZONE DEFAULT now(),
+    activated_at TIMESTAMP WITH TIME ZONE
 );
 ```
 
@@ -480,8 +427,6 @@ activated_at TIMESTAMP WITH TIME ZONE
 ---
 
 ## 5. Tutor Payouts Table
-
-SQL
 
 ```sql
 CREATE TABLE tutor_payouts (
@@ -501,19 +446,15 @@ CREATE TABLE tutor_payouts (
     airwallex_payout_id TEXT,
     payment_sent_date DATE,
 
----
+    reconciled_date DATE,
+    deduction_applied NUMERIC DEFAULT 0,
 
+    line_items JSONB, -- For manual payouts
 
-## Page 13
-
-reconciled_date DATE,
-deduction_applied NUMERIC DEFAULT 0,
-
-line_items JSONB, -- For manual payouts
-
-created_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT now(),
-updated_at TIMESTAMP WITH TIME ZONE DEFAULT now()
-);
+    created_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT now(),
+    updated_at TIMESTAMP WITH TIME ZONE DEFAULT now()
+    );
+```
 
 **Status Flow:**
 
@@ -545,12 +486,6 @@ CREATE TABLE terms_acceptances (
     (user_id, document_type)
 );
 
----
-
-
-## Page 14
-
-sql
 CREATE INDEX idx_terms_acceptances_user_id ON terms_acceptances(user_id);
 CREATE INDEX idx_terms_acceptances_document_type ON terms_acceptances(document_type);
 ```
@@ -590,9 +525,6 @@ No admin agreement required
 *   Update hours_used and hours_remaining
 
 ---
-
-
-## Page 15
 
 ## Late Cancelled Lessons:
 
@@ -644,9 +576,6 @@ No admin agreement required
 
 ---
 
-
-## Page 16
-
 * ❌ Parent-linked students (parent manages, parent gets credit)
 
 ## How It Works:
@@ -689,9 +618,6 @@ No admin agreement required
 * Late cancellation penalties
 
 ---
-
-
-## Page 17
 
 * Equipment/material fees
 * Platform fees
@@ -741,10 +667,6 @@ No admin agreement required
 2. **Late Cancellations:** Count lessons × (50% × `tutor_hourly_rate`)
 3. **Transportation:** Sum uploaded receipt amounts
 
----
-
-
-## Page 18
 
 ## Admin Review:
 
@@ -789,9 +711,6 @@ No admin agreement required
 1.  All hours consumed OR admin marks complete
 
 ---
-
-
-## Page 19
 
 2. Check tutor's deduction_balance
 3. Create Xero PO + Bill together:
@@ -839,9 +758,6 @@ No admin agreement required
 ### Lead Lifecycle
 
 ---
-
-
-## Page 20
 
 # Stages:
 
@@ -892,9 +808,6 @@ No admin agreement required
 
 ---
 
-
-## Page 21
-
 # Trial Outcome Handling
 
 ## Outcome 1: Successful
@@ -940,9 +853,6 @@ No admin agreement required
 4.  Generate Xero invoice (with credit shown)
 
 ---
-
-
-## Page 22
 
 5. Create payment record
 6. Update lead (if applicable): `lead_status='package_confirmed'`
@@ -992,9 +902,6 @@ No admin agreement required
 
 ---
 
-
-## Page 23
-
 4. Payment record created (status='pending' or 'paid')
 5. Client pays → Access enabled
 
@@ -1041,9 +948,6 @@ No admin agreement required
 
 ---
 
-
-## Page 24
-
 *   Package details, tutor rate, expected amount, hours progress
 *   SECONDARY: Pending Payouts (completed packages)
     *   Base amount, fees breakdown, deductions, net payout
@@ -1089,9 +993,6 @@ No admin agreement required
 4.  Trial Payment Confirmed - Payment received
 
 ---
-
-
-## Page 25
 
 **Packages:**
 5. Package Payment Request - After successful trial
@@ -1146,9 +1047,6 @@ No admin agreement required
 
 ---
 
-
-## Page 26
-
 *   Pre-populated: Contact details, school
 *   Visible: "For Which Student?" dropdown (existing + "Add new child")
 *   If "Add new child": Expand fields (name, email), create account on submit
@@ -1197,9 +1095,6 @@ No admin agreement required
 
 ---
 
-
-## Page 27
-
 ## Flow 2: Package Completion → Additional Fees
 
 1. Final lesson consumes remaining hours
@@ -1240,9 +1135,6 @@ No admin agreement required
 * Authentication & role-based access
 
 ---
-
-
-## Page 28
 
 *   User management (CRUD, credit/deduction interfaces)
 *   T&C onboarding step (all roles except admin)
@@ -1289,9 +1181,6 @@ No admin agreement required
 # Success Criteria
 
 ---
-
-
-## Page 29
 
 # Authentication & Onboarding
 
@@ -1552,9 +1441,6 @@ No admin agreement required
 
 ---
 
-
-## Page 30
-
 *   ☑ Users (all roles)
 *   ☑ Packages (if exist)
 *   ☑ Subjects
@@ -1601,9 +1487,6 @@ Detailed planning contingent on Phase 1 success
 **Timeline:** October 2025 - January 2026 (4 months)
 
 ---
-
-
-## Page 31
 
 **Beta:** November-December 2025
 
